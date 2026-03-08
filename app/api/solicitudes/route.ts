@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { solicitudes } from "@/lib/solicitudesStore";
+import { getSolicitudesCollection } from "@/lib/database";
 import { Solicitud } from "@/models/Solicitud";
 
 export async function POST(req: Request) {
@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const nuevaSolicitud: Solicitud = {
+    const nuevaSolicitud = {
       id: Date.now().toString(),
       userId,
       userEmail,
@@ -35,7 +35,8 @@ export async function POST(req: Request) {
       updatedAt: new Date().toISOString(),
     };
 
-    solicitudes.push(nuevaSolicitud);
+    const solicitudesDB = await getSolicitudesCollection();
+    solicitudesDB.insert(nuevaSolicitud);
 
     return NextResponse.json(
       {
@@ -57,6 +58,7 @@ export async function GET(req: Request) {
     const authHeader = req.headers.get("authorization");
     const role = req.headers.get("role");
     const userId = req.headers.get("userid");
+    const solicitudesDB = await getSolicitudesCollection();
 
     if (!authHeader) {
       return NextResponse.json(
@@ -72,18 +74,18 @@ export async function GET(req: Request) {
       );
     }
 
+    const todasLasSolicitudes = solicitudesDB.find();
+
     // Admin puede ver todo
     if (role === "admin") {
       return NextResponse.json(
-        { solicitudes },
+        { solicitudes: todasLasSolicitudes },
         { status: 200 }
       );
     }
 
-    // Usuario solo ve sus solicitudes
-    const misSolicitudes = solicitudes.filter(
-      (s) => s.userId === userId
-    );
+    // Usuario solo ve las suyas
+    const misSolicitudes = solicitudesDB.find({ userId });
 
     return NextResponse.json(
       { solicitudes: misSolicitudes },
