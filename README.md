@@ -24,4 +24,4 @@ de soporte, permisos y requerimientos.
 
 ## Estado del proyecto
 
-Semana 1 – Diseño y Frontend base
+Finalizado
